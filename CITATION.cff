@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: Please use the following metadata when citing this project in your work.
 title: Auto Injector
-abstract:
+abstract: Automates the injection of dependencies for your class.
 version: 0.0.0
 license: Hippocratic-2.1
 date-released: 2022-02-21
