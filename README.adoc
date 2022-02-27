@@ -2,28 +2,321 @@
 :toclevels: 5
 :figure-caption!:
 
-= Auto Injector
+:dry-auto_inject_link: link:https://dry-rb.org/gems/dry-auto_inject[Dry AutoInject]
+:dry-container_link: link:https://dry-rb.org/gems/dry-container[Dry Container]
+:http_link: link:https://github.com/httprb/http[HTTP]
+
+= AutoInjector
+
+Automates the injection of class dependencies. Dependency injection -- the _D_ in _SOLID_ design --
+is a powerful way to compose complex architectures from small objects which have a single
+responsibility -- the _S_ in _SOLID_ design. This gems enhances object construction with
+dependencies in mind from the start.
+
+This gem is inspired by and based off the {dry-auto_inject_link} gem. There are a few major
+differences between this gem and the original Dry AutoInject gem which are:
+
+* All injected dependencies are _private by default_ in order to not break encapsulation.
+* Only keyword arguments -- no aliasing -- is supported while the original Dry AutoInject will
+  support aliases, positional, or hash arguments too.
+
+The entire architecture centers around the injection of a _container_ of dependencies. A container
+can be any object that responds to the `#[]` message and pairs well with the {dry-container_link}
+gem but a primitive `Hash` will work as well. Here's a quick example of AutoInjector in action:
+
+[source,ruby]
+----
+Import = AutoInjector[{a: 1, b: 2, c: 3}]
+
+class Demo
+  include Import[:a, :b, :c]
+
+  def to_s = "My injected dependencies are: #{a}, #{b}, and #{c}."
+end
+
+puts Demo.new  # My injected dependencies are: 1, 2, and 3.
+----
+
+By using AutoInjector, you have the ability to define common dependencies that can be injected
+without having to do the manual setup normally required to define your constructor and set
+private instance variables.
 
 toc::[]
 
 == Features
 
-== Screencasts
+* Ensures injected dependencies are _private by default_.
+* Uses a slimmed down architecture with a strong focus on keyword arguments.
+* Built on top of the link:https://www.alchemists.io/projects/marameters[Marameters] gem.
 
 == Requirements
 
 . link:https://www.ruby-lang.org[Ruby].
+. An understanding of SOLID design principles.
 
 == Setup
 
-To set up the project, run:
+To install, run:
 
 [source,bash]
 ----
-bin/setup
+gem install auto_injector
 ----
 
-== Usage
+Add the following to your Gemfile file:
+
+[source,ruby]
+----
+gem "auto_injector"
+----
+
+== Basic Usage
+
+This gem requires three steps for proper usage:
+
+. A container.
+. An injector.
+. A class and/or multiple classes for dependencies to be injected into.
+
+Let's walk through each staring with defining a container of dependencies.
+
+=== Containers
+
+A container provides a common object for which you can group related dependencies for injection into
+one or more classes for reuse. My recommendation is to use the {dry-container_link} gem to define
+your containers but a primitive `Hash` or any object which responds to the `#[]` message will work
+too.
+
+For documentation purposes, we'll use the {dry-container_link} gem. Here's how to create a simple
+container where you might want to use the {http_link} gem to make HTTP requests and log information
+using Ruby's native logger.
+
+[source,ruby]
+----
+require "http"
+require "logger"
+
+module Container
+  extend Dry::Container::Mixin
+
+  register(:http) { HTTP }
+  register(:logger) { Logger.new STDOUT }
+end
+----
+
+=== Injectors
+
+Once your container is defined, you'll want to define the corresponding injector for reuse within
+your application. Defining an injector only requires two lines of code:
+
+[source,ruby]
+----
+require "auto_injector"
+
+Import = AutoInjector[Container]
+----
+
+=== Dependencies
+
+With your container and injector defined, now you can inject your dependencies by including what you
+need:
+
+[source,ruby]
+----
+class Pinger
+  include Import[:http, :logger]
+
+  def call url
+    http.get(url).status.then { |status| logger.info %(The status of "#{url}" is #{status}.) }
+  end
+end
+----
+
+Now when you ping a URL, you'll see the status of the server logged to console using all injected
+dependencies:
+
+[source,ruby]
+----
+Pinger.new.call "https://duckduckgo.com"
+# I, [2022-03-01T10:00:00.979741 #81819]  INFO -- : The status of "https://duckduckgo.com" is 200 OK.
+----
+
+== Advanced Usage
+
+When injecting your dependencies you _must_ always define what dependencies you require. By default,
+none will be injected. The following will demonstrate multiple ways in which to manage the injection
+of your dependencies.
+
+=== Explicit Dependencies
+
+Earlier, when demonstrating basic usage, all dependencies were injected by default:
+
+[source,ruby]
+----
+class Pinger
+  include Import[:http, :logger]
+end
+----
+
+...but we could have had a different class, let's say a downloader, that only needs the HTTP client.
+In that case, we could imort the _same_ container but only required the HTTP dependency. Example:
+
+[source,ruby]
+----
+class Downloader
+  include Import[:http]
+end
+----
+
+You could also have a different class that only cares about logging but not the HTTP dependency.
+This allows you to reuse your injector (i.e. `Import`) in multiple situations as makes sense.
+
+=== Custom Initialization
+
+Should you want to use auto-injection in combination with your own initializer, you'll need to
+ensure the injected dependencies are passed upward. All you need to do is define the injected
+dependencies as your last argument and then pass them to `super`. Example:
+
+[source,ruby]
+----
+class Pinger
+  include Import[:logger]
+
+  def initialize http: HTTP, **dependencies
+    super(**dependencies)
+
+    @http = http
+  end
+
+  private
+
+  attr_reader :http
+end
+----
+
+The above will ensure the logger gets passed upwards to the injector so it's properly defined and
+accessible to your class as your custom defined HTTP dependency.
+
+=== Inheritance
+
+When using inheritance or multiple inheritance, the child class' dependencies will take precedence
+over the parent's dependencies as long as the keys are the same. Consider the following:
+
+[source,ruby]
+----
+class Parent
+  def initialize logger: Logger.new(StringIO.new)
+    @logger = logger
+  end
+
+  private
+
+  attr_reader :logger
+end
+
+class Child < Parent
+  include Import[:logger]
+end
+----
+
+In the above situation, the child's logger will be the logger that is injected which overrides the
+default logger defined by the parent. This applies to multiple inheritance too. Example:
+
+[source,ruby]
+----
+class Parent
+  include GeneralImport[:logger]
+end
+
+class Child < Parent
+  include Import[:logger]
+end
+----
+
+Once again, the child's logger will take precedence over the what is provided by default by the
+parent. This also applies to multiple levels of inheritance or multiple inherited modules. Which
+ever is last, wins.
+
+Lastly, you can mix and match dependencies too:
+
+[source,ruby]
+----
+class Parent
+  include Import[:logger]
+end
+
+class Child < Parent
+  include Import[:http]
+end
+----
+
+With the above, the child class will have access to both the `logger` and `http` dependencies.
+
+⚠️ Be careful when using parent dependencies within your child classes since they are _private by
+default_. Even though you can reach them, they might change, which can break your downstream
+dependencies and probably should be avoided or at least defined as `protected` by your parent
+objects in order to avoid breaking your parent/child relationship.
+
+== Architecture
+
+This gem automates a lot of the boilerplate code you'd normally have to do manually by defining your
+constructor, initializer, and instance variables for you. Normally, when injecting dependencies,
+you'd do something like this (using the `Pinger` example provided earlier):
+
+[source,ruby]
+----
+class Pinger
+  def initialize http: HTTP, logger: Logger.new(STDOUT)
+    @http = http
+    @logger = logger
+  end
+
+  def call url
+    http.get(url).status.then { |status| logger.info %(The status of "#{url}" is #{status}.) }
+  end
+
+  private
+
+  attr_reader :http, :logger
+end
+----
+
+When you use this gem all of the construction, initialization, and setting of private instance
+variables is taken care of for you. So what you see above is identical to the following:
+
+[source,ruby]
+----
+class Pinger
+  include Import[:http, :logger]
+
+  def call url
+    http.get(url).status.then { |status| logger.info %(The status of "#{url}" is #{status}.) }
+  end
+end
+----
+
+Your constructor, initializer, and instance variables are all there. Only you don't have to write
+all of this yourself anymore. 🎉
+
+== Style Guide
+
+When using this gem, along with a container like {dry-container_link}, make sure to adhere to the
+following guidelines:
+
+* Use containers to group related dependencies which makes logical sense for the namespace you are
+  working in. You want to avoid using containers as a junk drawer for throwing any random object
+  in.
+* Use containers that don't have a lot of registered dependencies. If you register too many
+  dependencies, then that means your objects are too complex and need to be broken down and
+  simplifed further.
+* Use injectors to define containers you want to auto-inject. You can define these along with your
+  containers or within separate files. Like containers, they should be namespaced and related to the
+  objects that need them.
+* Use the `Import` constant to define your injectors much like you'd use `Container` to define your
+  containers.
+* Use `**dependencies` as your named keyword splat argument when defining an initializer which needs
+  to pass auto-injected dependencies upwards. This improves readability and clearly labels your
+  auto-injected dependencies.
 
 == Development
 
