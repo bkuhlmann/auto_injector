@@ -1,3 +1,15 @@
 exclude_paths:
   - tmp
   - vendor
+
+detectors:
+  NestedIterators:
+    exclude:
+      - "AutoInjector::Constructor#define_initialize_with_keywords"
+      - "AutoInjector::Constructor#define_initialize_with_positionals"
+      - "AutoInjector::Constructor#define_new"
+
+directories:
+  "spec/lib/auto_injector":
+    LongParameterList:
+      enabled: false
