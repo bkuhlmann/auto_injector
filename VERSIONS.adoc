@@ -1,5 +1,13 @@
 = Versions
 
-== 0.0.0 (2022-02-21)
+== 0.0.0 (2022-03-06)
 
-* Added initial implementation.
+* Added Marameters gem - Brooke Kuhlmann
+* Added actuator - Brooke Kuhlmann
+* Added constructor - Brooke Kuhlmann
+* Added documentation - Brooke Kuhlmann
+* Added gem summary - Brooke Kuhlmann
+* Added primary import interface - Brooke Kuhlmann
+* Added project skeleton - Brooke Kuhlmann
+* Updated Reek configuration to exclude certain objects - Brooke Kuhlmann
+* Updated RuboCop configuration to exclude certain objects - Brooke Kuhlmann
