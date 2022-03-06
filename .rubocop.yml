@@ -1,2 +1,10 @@
 inherit_gem:
   caliber: config/all.yml
+
+Lint/UselessMethodDefinition:
+  Exclude:
+    - "spec/lib/auto_injector/constructor_spec.rb"
+
+Metrics/ParameterLists:
+  Exclude:
+    - "spec/lib/auto_injector/constructor_spec.rb"
