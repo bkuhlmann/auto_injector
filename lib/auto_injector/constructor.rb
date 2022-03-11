@@ -6,7 +6,7 @@ module AutoInjector
   # Provides the automatic and complete resolution of all injected dependencies.
   # :reek:TooManyInstanceVariables
   class Constructor < Module
-    def initialize container, *keys, marameters: Marameters::Core
+    def initialize container, *keys, marameters: Marameters::Analyzer
       super()
 
       @container = container
@@ -44,10 +44,10 @@ module AutoInjector
 
     def define_initialize klass
       super_parameters = marameters.of(klass, :initialize).map do |instance|
-        break instance unless instance.unnamed_splats_only?
+        break instance unless instance.only_bare_splats?
       end
 
-      if super_parameters.positional? || super_parameters.named_single_splat_only?
+      if super_parameters.positionals? || super_parameters.only_single_splats?
         define_initialize_with_positionals super_parameters
       else
         define_initialize_with_keywords super_parameters
@@ -59,10 +59,10 @@ module AutoInjector
         define_method :initialize do |*args, **keywords, &block|
           variable_definer.call self, keywords
 
-          if super_parameters.named_single_splat_only?
+          if super_parameters.only_single_splats?
             super(*args, **keywords, &block)
           else
-            super(*args, **super_parameters.slice(keywords, keys:), &block)
+            super(*args, **super_parameters.keyword_slice(keywords, keys:), &block)
           end
         end
       end
@@ -72,7 +72,7 @@ module AutoInjector
       instance_module.class_exec keys, method(:define_variables) do |keys, variable_definer|
         define_method :initialize do |**keywords, &block|
           variable_definer.call self, keywords
-          super(**super_parameters.slice(keywords, keys:), &block)
+          super(**super_parameters.keyword_slice(keywords, keys:), &block)
         end
       end
     end
