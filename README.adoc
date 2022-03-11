@@ -70,7 +70,11 @@ Add the following to your Gemfile file:
 gem "auto_injector"
 ----
 
-== Basic Usage
+== Usage
+
+There is basic and advanced usage. We'll start with basic and work our way down to advanced usage.
+
+=== Basic
 
 This gem requires three steps for proper usage:
 
@@ -80,7 +84,7 @@ This gem requires three steps for proper usage:
 
 Let's walk through each staring with defining a container of dependencies.
 
-=== Containers
+==== Containers
 
 A container provides a common object for which you can group related dependencies for injection into
 one or more classes for reuse. My recommendation is to use the {dry-container_link} gem to define
@@ -104,7 +108,7 @@ module Container
 end
 ----
 
-=== Injectors
+==== Injectors
 
 Once your container is defined, you'll want to define the corresponding injector for reuse within
 your application. Defining an injector only requires two lines of code:
@@ -116,7 +120,7 @@ require "auto_injector"
 Import = AutoInjector[Container]
 ----
 
-=== Dependencies
+==== Dependencies
 
 With your container and injector defined, now you can inject your dependencies by including what you
 need:
@@ -141,13 +145,27 @@ Pinger.new.call "https://duckduckgo.com"
 # I, [2022-03-01T10:00:00.979741 #81819]  INFO -- : The status of "https://duckduckgo.com" is 200 OK.
 ----
 
-== Advanced Usage
+=== Advanced Usage
 
 When injecting your dependencies you _must_ always define what dependencies you require. By default,
 none will be injected. The following will demonstrate multiple ways in which to manage the injection
 of your dependencies.
 
-=== Explicit Dependencies
+==== Keys
+
+You can use symbols, strings, or a combination of both when defining which dependencies you want to
+inject. Example:
+
+[source,ruby]
+----
+class Pinger
+  include Import[:http, "logger"]
+end
+----
+
+All keys are always converted to symbols when determining which dependencies to inject.
+
+==== Explicit Dependencies
 
 Earlier, when demonstrating basic usage, all dependencies were injected by default:
 
@@ -159,7 +177,7 @@ end
 ----
 
 ...but we could have had a different class, let's say a downloader, that only needs the HTTP client.
-In that case, we could imort the _same_ container but only required the HTTP dependency. Example:
+In that case, we could imort the _same_ container but only require the HTTP dependency. Example:
 
 [source,ruby]
 ----
@@ -171,7 +189,7 @@ end
 You could also have a different class that only cares about logging but not the HTTP dependency.
 This allows you to reuse your injector (i.e. `Import`) in multiple situations as makes sense.
 
-=== Custom Initialization
+==== Custom Initialization
 
 Should you want to use auto-injection in combination with your own initializer, you'll need to
 ensure the injected dependencies are passed upward. All you need to do is define the injected
@@ -197,7 +215,7 @@ end
 The above will ensure the logger gets passed upwards to the injector so it's properly defined and
 accessible to your class as your custom defined HTTP dependency.
 
-=== Inheritance
+==== Inheritance
 
 When using inheritance or multiple inheritance, the child class' dependencies will take precedence
 over the parent's dependencies as long as the keys are the same. Consider the following:

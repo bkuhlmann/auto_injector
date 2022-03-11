@@ -1,5 +1,9 @@
 = Versions
 
+== 0.1.0 (2022-03-10)
+
+* Updated to Maramters 0.1.0 - Brooke Kuhlmann
+
 == 0.0.0 (2022-03-06)
 
 * Added Marameters gem - Brooke Kuhlmann
