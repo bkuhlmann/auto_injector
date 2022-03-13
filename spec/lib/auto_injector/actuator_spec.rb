@@ -3,12 +3,9 @@
 require "spec_helper"
 
 RSpec.describe AutoInjector::Actuator do
-  subject(:actuator) { described_class.new Test::Container }
+  subject(:actuator) { described_class.new({a: 1, b: 2, c: 3}) }
 
-  before do
-    stub_const "Test::Container", {a: 1, b: 2, c: 3}
-    stub_const "Test::Import", actuator
-  end
+  before { stub_const "Test::Import", actuator }
 
   describe "#[]" do
     let(:child) { Class.new.include Test::Import[:a, :b, :c] }
