@@ -1,5 +1,12 @@
 = Versions
 
+== 0.2.0 (2022-03-20)
+
+* Added Dry Container gem - Brooke Kuhlmann
+* Added stub refinement - Brooke Kuhlmann
+* Updated Zeitwerk to ignore stub refinement - Brooke Kuhlmann
+* Refactored actuator spec to use less lines of code - Brooke Kuhlmann
+
 == 0.1.0 (2022-03-10)
 
 * Updated to Maramters 0.1.0 - Brooke Kuhlmann

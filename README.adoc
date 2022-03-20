@@ -145,7 +145,7 @@ Pinger.new.call "https://duckduckgo.com"
 # I, [2022-03-01T10:00:00.979741 #81819]  INFO -- : The status of "https://duckduckgo.com" is 200 OK.
 ----
 
-=== Advanced Usage
+=== Advanced
 
 When injecting your dependencies you _must_ always define what dependencies you require. By default,
 none will be injected. The following will demonstrate multiple ways in which to manage the injection
@@ -176,8 +176,8 @@ class Pinger
 end
 ----
 
-...but we could have had a different class, let's say a downloader, that only needs the HTTP client.
-In that case, we could imort the _same_ container but only require the HTTP dependency. Example:
+...but we could have had a different class, lets say a downloader, that only needs the HTTP client.
+In that case, we could import the _same_ container but only require the HTTP dependency. Example:
 
 [source,ruby]
 ----
@@ -275,6 +275,126 @@ default_. Even though you can reach them, they might change, which can break you
 dependencies and probably should be avoided or at least defined as `protected` by your parent
 objects in order to avoid breaking your parent/child relationship.
 
+=== Tests
+
+As you architect your implementation, you'll want to test your injected dependencies. You'll also
+want to stub, mock, or spy on them as well. Testing support is built-in for you by only needing to
+require the stub refinement as provided by this gem. For demonstration purposes, I'm going to assume
+you are using RSpec but you can adapt for whatever testing framework you are using.
+
+Let's say you have the following implementation that combines both {dry-container_link} (or a
+primitve `Hash` would work too) and this gem:
+
+[source,ruby]
+----
+# Our container with a single dependency.
+module Container
+  extend Dry::Container::Mixin
+
+  register(:kernel) { Kernel }
+end
+
+# Our import which defines our container for potential injection.
+Import = AutoInjector[Container]
+
+# Our action class which uses Auto Injector to inject our kernel dependency from our container.
+class Action
+  include Import[:kernel]
+
+  def call = kernel.puts "This is a test."
+end
+----
+
+With our implementation defined, we can test as follows:
+
+[source,ruby]
+----
+# Required: You must require Dry Container and Auto Injector stubbing for testing purposes.
+require "dry/container/stub"
+require "auto_injector/stub"
+
+RSpec.describe Action do
+  # Required: You must refine Auto Injector to leverage stubbing of your dependencies.
+  using AutoInjector::Stub
+
+  subject(:action) { Action.new }
+
+  let(:kernel) { class_spy Kernel }
+
+  # Required: You must define what dependencies you want to stub and unstub before and after a test.
+  before { Import.stub kernel: }
+  after { Import.unstub kernel: }
+
+  describe "#call" do
+    it "prints message" do
+      action.call
+      expect(kernel).to have_received(:puts).with("This is a test.")
+    end
+  end
+end
+----
+
+Notice that there is very little setup required to test auto-injected dependencies. All you need to
+do is use the refinement and define what you want to stub in your `before` and `after` blocks.
+That's it!
+
+While the above works great for a single spec, over time you'll want to reduce duplicated setup by
+using a shared context. Here's a rewrite of the above spec which significantly reduces duplication
+when needing to test multiple objects using the same dependencies:
+
+[source,ruby]
+----
+# spec/support/shared_contexts/application_container.rb
+require "dry/container/stub"
+require "auto_injector/stub"
+
+RSpec.shared_context "with application container" do
+  using AutoInjector::Stub
+
+  let(:kernel) { class_spy Kernel }
+
+  before { Import.stub kernel: }
+  after { Import.unstub kernel: }
+end
+----
+
+[source,ruby]
+----
+# spec/lib/action_spec.rb
+RSpec.describe Action do
+  subject(:action) { Action.new }
+
+  include_context "with application container"
+
+  describe "#call" do
+    it "prints message" do
+      action.call
+      expect(kernel).to have_received(:puts).with("This is a test.")
+    end
+  end
+end
+----
+
+A shared context allows you to reuse it across multiple specs by including it as needed.
+
+In both spec examples -- so far -- you'll notice only RSpec `before` and `after` blocks are used.
+You can use an `around` block too. Example:
+
+[source,ruby]
+----
+around do |example|
+  Import.stub_with kernel: FakeKernel do
+    example.run
+  end
+end
+----
+
+⚠️ I mention `around` block support last because the caveat is that you can't use an `around` block
+with any RSpec test double since link:https://github.com/rspec/rspec-mocks/issues/1283[RSpec can't
+guarantee proper cleanup]. This is why the RSpec `before` and `after` blocks were used to guarantee
+proper setup and teardown. That said, you can use _fakes_ or any object you own which _isn't_ a
+RSpec test double but provides the Object API you need for testing purposes.
+
 == Architecture
 
 This gem automates a lot of the boilerplate code you'd normally have to do manually by defining your
@@ -326,14 +446,14 @@ following guidelines:
   in.
 * Use containers that don't have a lot of registered dependencies. If you register too many
   dependencies, then that means your objects are too complex and need to be broken down and
-  simplifed further.
+  simplified further.
 * Use injectors to define containers you want to auto-inject. You can define these along with your
   containers or within separate files. Like containers, they should be namespaced and related to the
   objects that need them.
 * Use the `Import` constant to define your injectors much like you'd use `Container` to define your
-  containers.
+  containers. These should be defined in separate files for improved fuzzy file finding.
 * Use `**dependencies` as your named keyword splat argument when defining an initializer which needs
-  to pass auto-injected dependencies upwards. This improves readability and clearly labels your
+  to pass auto-injected dependencies upwards. This improves readability by clearly identifying your
   auto-injected dependencies.
 
 == Development
