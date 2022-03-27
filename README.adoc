@@ -348,7 +348,7 @@ when needing to test multiple objects using the same dependencies:
 require "dry/container/stub"
 require "auto_injector/stub"
 
-RSpec.shared_context "with application container" do
+RSpec.shared_context "with application dependencies" do
   using AutoInjector::Stub
 
   let(:kernel) { class_spy Kernel }
@@ -364,7 +364,7 @@ end
 RSpec.describe Action do
   subject(:action) { Action.new }
 
-  include_context "with application container"
+  include_context "with application dependencies"
 
   describe "#call" do
     it "prints message" do
