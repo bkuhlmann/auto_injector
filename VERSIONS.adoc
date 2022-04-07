@@ -1,5 +1,10 @@
 = Versions
 
+== 0.3.0 (2022-04-06)
+
+* Fixed README to mention dependencies instead of container - Brooke Kuhlmann
+* Updated to Marameters 0.3.0 - Brooke Kuhlmann
+
 == 0.2.0 (2022-03-20)
 
 * Added Dry Container gem - Brooke Kuhlmann

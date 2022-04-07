@@ -22,7 +22,7 @@ differences between this gem and the original Dry AutoInject gem which are:
 
 The entire architecture centers around the injection of a _container_ of dependencies. A container
 can be any object that responds to the `#[]` message and pairs well with the {dry-container_link}
-gem but a primitive `Hash` will work as well. Here's a quick example of AutoInjector in action:
+gem but a primitive `Hash` works too. Here's a quick example of AutoInjector in action:
 
 [source,ruby]
 ----
@@ -88,8 +88,7 @@ Let's walk through each staring with defining a container of dependencies.
 
 A container provides a common object for which you can group related dependencies for injection into
 one or more classes for reuse. My recommendation is to use the {dry-container_link} gem to define
-your containers but a primitive `Hash` or any object which responds to the `#[]` message will work
-too.
+your containers but a primitive `Hash` or any object which responds to the `#[]` message works too.
 
 For documentation purposes, we'll use the {dry-container_link} gem. Here's how to create a simple
 container where you might want to use the {http_link} gem to make HTTP requests and log information
