@@ -6,7 +6,7 @@ module AutoInjector
   # Provides the automatic and complete resolution of all injected dependencies.
   # :reek:TooManyInstanceVariables
   class Constructor < Module
-    def initialize container, *keys, marameters: Marameters::Analyzer
+    def initialize container, *keys, marameters: Marameters::Probe
       super()
 
       @container = container
