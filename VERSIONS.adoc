@@ -1,5 +1,13 @@
 = Versions
 
+== 0.4.0 (2022-04-09)
+
+* Fixed stub refinment to use keys when unstubbing - Brooke Kuhlmann
+* Updated to Caliber 0.4.0 - Brooke Kuhlmann
+* Updated to Caliber 0.5.0 - Brooke Kuhlmann
+* Updated to Debug 1.5.0 - Brooke Kuhlmann
+* Removed DeadEnd gem - Brooke Kuhlmann
+
 == 0.3.0 (2022-04-06)
 
 * Fixed README to mention dependencies instead of container - Brooke Kuhlmann
