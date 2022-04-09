@@ -322,7 +322,7 @@ RSpec.describe Action do
 
   # Required: You must define what dependencies you want to stub and unstub before and after a test.
   before { Import.stub kernel: }
-  after { Import.unstub kernel: }
+  after { Import.unstub :kernel }
 
   describe "#call" do
     it "prints message" do
@@ -353,7 +353,7 @@ RSpec.shared_context "with application dependencies" do
   let(:kernel) { class_spy Kernel }
 
   before { Import.stub kernel: }
-  after { Import.unstub kernel: }
+  after { Import.unstub :kernel }
 end
 ----
 

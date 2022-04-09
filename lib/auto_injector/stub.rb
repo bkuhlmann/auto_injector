@@ -14,14 +14,14 @@ module AutoInjector
 
       def stub(pairs) = container.is_a?(Hash) ? stub_hash(pairs) : stub_container(pairs)
 
-      def unstub(pairs) = container.is_a?(Hash) ? unstub_hash : unstub_container(pairs)
+      def unstub(*keys) = container.is_a?(Hash) ? unstub_hash(*keys) : unstub_container(*keys)
 
       private
 
       def stub_container_with pairs
         stub_container pairs
         yield
-        unstub_container pairs
+        unstub_container(*pairs.keys)
       end
 
       def stub_container pairs
@@ -29,12 +29,12 @@ module AutoInjector
         pairs.each { |key, value| container.stub key, value }
       end
 
-      def unstub_container(pairs) = pairs.each_key { |key| container.unstub key }
+      def unstub_container(*keys) = keys.each { |key| container.unstub key }
 
       def stub_hash_with pairs
         stub_hash pairs
         yield
-        unstub_hash
+        unstub_hash(*pairs.keys)
       end
 
       def stub_hash pairs
@@ -42,7 +42,7 @@ module AutoInjector
         container.merge! pairs
       end
 
-      def unstub_hash = container.replace @backup
+      def unstub_hash(*keys) = container.merge! @backup.slice(*keys)
     end
   end
 end

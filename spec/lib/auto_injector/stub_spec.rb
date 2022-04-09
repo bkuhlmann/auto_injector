@@ -96,7 +96,7 @@ RSpec.describe AutoInjector::Stub do
       end
 
       it "answers original dependencies" do
-        Test::Import.unstub a: 100, b: 200, c: 300
+        Test::Import.unstub :a, :b, :c
         expect(child.new.inspect).to include("@a=1, @b=2, @c=3")
       end
     end
@@ -110,7 +110,7 @@ RSpec.describe AutoInjector::Stub do
       end
 
       it "answers original dependencies" do
-        Test::Import.unstub a: 100, b: 200, c: 300
+        Test::Import.unstub :a, :b, :c
         expect(child.new.inspect).to include("@a=1, @b=2, @c=3")
       end
     end
