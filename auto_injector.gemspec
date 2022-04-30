@@ -13,6 +13,7 @@ Gem::Specification.new do |spec|
     "bug_tracker_uri" => "https://github.com/bkuhlmann/auto_injector/issues",
     "changelog_uri" => "https://www.alchemists.io/projects/auto_injector/versions",
     "documentation_uri" => "https://www.alchemists.io/projects/auto_injector",
+    "funding_uri" => "https://github.com/sponsors/bkuhlmann",
     "label" => "Auto Injector",
     "rubygems_mfa_required" => "true",
     "source_code_uri" => "https://github.com/bkuhlmann/auto_injector"
