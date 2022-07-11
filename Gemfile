@@ -18,7 +18,7 @@ group :development do
 end
 
 group :test do
-  gem "dry-container", "~> 0.9"
+  gem "dry-container", "~> 0.10"
   gem "guard-rspec", "~> 4.7", require: false
   gem "rspec", "~> 3.11"
 end
